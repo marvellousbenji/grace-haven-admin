@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -12,7 +13,8 @@ const SignUp = () => {
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    role: "user" as 'user' | 'admin'
   });
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
@@ -38,6 +40,7 @@ const SignUp = () => {
       lastName: formData.lastName,
       email: formData.email,
       password: formData.password,
+      role: formData.role,
     });
     
     if (success) {
@@ -132,6 +135,18 @@ const SignUp = () => {
                   className="font-poppins"
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role" className="font-poppins font-medium">Account Type</Label>
+                <Select value={formData.role} onValueChange={(value: 'user' | 'admin') => setFormData(prev => ({ ...prev, role: value }))}>
+                  <SelectTrigger className="font-poppins">
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Customer</SelectItem>
+                    <SelectItem value="admin">Admin/Tailor</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button type="submit" className="w-full font-poppins font-medium" disabled={isLoading}>
                 {isLoading ? "Creating Account..." : "Create Account"}

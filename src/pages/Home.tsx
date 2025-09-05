@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Star, Heart, ShoppingBag, Calendar, Phone, Mail, MapPin, Plus, Upload, LogOut } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductUpload } from "@/components/ProductUpload";
+import { Cart } from "@/components/Cart";
 import { Product } from "@/types/product";
 import { storage } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ const Home = () => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductDetails, setShowProductDetails] = useState(false);
+  const [showCart, setShowCart] = useState(false);
 
   useEffect(() => {
     setProducts(storage.getProducts());
@@ -67,20 +69,22 @@ const Home = () => {
             <a href="#contact" className="text-foreground hover:text-primary transition-colors">Contact</a>
           </div>
           <div className="flex items-center space-x-3">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setShowUploadDialog(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Button>
+            {user?.role === 'admin' && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowUploadDialog(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Product
+              </Button>
+            )}
             {isAuthenticated ? (
               <>
                 <Button variant="ghost" size="icon">
                   <Heart className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" onClick={() => setShowCart(true)}>
                   <ShoppingBag className="h-5 w-5" />
                 </Button>
                 <Button variant="outline" size="sm" asChild>
@@ -128,10 +132,12 @@ const Home = () => {
               <ShoppingBag className="h-5 w-5 mr-2" />
               Shop Collection
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-3" onClick={() => setShowUploadDialog(true)}>
-              <Upload className="h-5 w-5 mr-2" />
-              Upload Product
-            </Button>
+            {user?.role === 'admin' && (
+              <Button variant="outline" size="lg" className="text-lg px-8 py-3" onClick={() => setShowUploadDialog(true)}>
+                <Upload className="h-5 w-5 mr-2" />
+                Upload Product
+              </Button>
+            )}
           </div>
         </div>
       </section>
@@ -157,11 +163,15 @@ const Home = () => {
                 <Upload className="h-12 w-12 text-muted-foreground" />
               </div>
               <h4 className="text-xl font-semibold mb-4">No products yet</h4>
-              <p className="text-muted-foreground mb-6">Upload your first product to start building your collection</p>
-              <Button onClick={() => setShowUploadDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Product
-              </Button>
+              <p className="text-muted-foreground mb-6">
+                {user?.role === 'admin' ? 'Upload your first product to start building your collection' : 'No products available yet. Check back soon!'}
+              </p>
+              {user?.role === 'admin' && (
+                <Button onClick={() => setShowUploadDialog(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Product
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -274,15 +284,20 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Product Upload Dialog */}
-      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Upload New Product</DialogTitle>
-          </DialogHeader>
-          <ProductUpload onProductAdded={handleProductAdded} />
-        </DialogContent>
-      </Dialog>
+      {/* Cart */}
+      <Cart isOpen={showCart} onOpenChange={setShowCart} />
+
+      {/* Product Upload Dialog - Admin Only */}
+      {user?.role === 'admin' && (
+        <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Upload New Product</DialogTitle>
+            </DialogHeader>
+            <ProductUpload onProductAdded={handleProductAdded} />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Product Details Dialog */}
       <Dialog open={showProductDetails} onOpenChange={setShowProductDetails}>

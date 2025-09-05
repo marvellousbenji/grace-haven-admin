@@ -35,6 +35,7 @@ export const authStorage = {
       email: userData.email,
       firstName: userData.firstName,
       lastName: userData.lastName,
+      role: userData.role,
       createdAt: new Date().toISOString(),
     };
 

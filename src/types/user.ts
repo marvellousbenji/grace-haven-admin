@@ -3,6 +3,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  role: 'admin' | 'user';
   createdAt: string;
 }
 
@@ -19,4 +20,5 @@ export interface SignUpData {
   lastName: string;
   email: string;
   password: string;
+  role: 'admin' | 'user';
 }
