@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,9 +6,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Clock, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useToast } from "@/hooks/use-toast";
+import { storage } from "@/lib/storage";
+import { useNavigate } from "react-router-dom";
 
-const BookingPage = () => {
+const BookingPageContent = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [booking, setBooking] = useState({
+    customerName: `${user?.firstName} ${user?.lastName}` || "",
+    customerEmail: user?.email || "",
+    customerPhone: "",
     service: "",
     date: "",
     time: "",
@@ -29,8 +40,28 @@ const BookingPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add booking logic with Supabase
-    console.log("Booking:", booking);
+    
+    const newBooking = {
+      id: crypto.randomUUID(),
+      productId: "", // For general appointments
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      customerPhone: booking.customerPhone,
+      appointmentDate: booking.date,
+      appointmentTime: booking.time,
+      notes: `${booking.service} - ${booking.notes}`,
+      status: 'pending' as const,
+      createdAt: new Date().toISOString(),
+    };
+    
+    storage.addBooking(newBooking);
+    
+    toast({
+      title: "Booking confirmed!",
+      description: "Your appointment has been scheduled. We'll contact you soon to confirm.",
+    });
+    
+    navigate("/home");
   };
 
   const selectedService = services.find(s => s.value === booking.service);
@@ -43,11 +74,11 @@ const BookingPage = () => {
           <h1 className="font-playfair text-2xl font-bold text-foreground">Grace Haven</h1>
           <div className="flex gap-4">
             <Button variant="outline" asChild>
-              <a href="/">Home</a>
+              <a href="/home">Home</a>
             </Button>
             <Button variant="outline">
               <User className="w-4 h-4 mr-2" />
-              Profile
+              {user?.firstName}
             </Button>
           </div>
         </div>
@@ -76,6 +107,42 @@ const BookingPage = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="customerName" className="font-poppins font-medium">Full Name</Label>
+                    <Input
+                      id="customerName"
+                      value={booking.customerName}
+                      onChange={(e) => setBooking(prev => ({ ...prev, customerName: e.target.value }))}
+                      className="font-poppins"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="customerPhone" className="font-poppins font-medium">Phone Number</Label>
+                    <Input
+                      id="customerPhone"
+                      type="tel"
+                      value={booking.customerPhone}
+                      onChange={(e) => setBooking(prev => ({ ...prev, customerPhone: e.target.value }))}
+                      className="font-poppins"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="customerEmail" className="font-poppins font-medium">Email</Label>
+                  <Input
+                    id="customerEmail"
+                    type="email"
+                    value={booking.customerEmail}
+                    onChange={(e) => setBooking(prev => ({ ...prev, customerEmail: e.target.value }))}
+                    className="font-poppins"
+                    readOnly
+                  />
+                </div>
+                
                 <div className="space-y-2">
                   <Label className="font-poppins font-medium">Select Service</Label>
                   <Select value={booking.service} onValueChange={(value) => setBooking(prev => ({ ...prev, service: value }))}>
@@ -164,6 +231,14 @@ const BookingPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const BookingPage = () => {
+  return (
+    <ProtectedRoute>
+      <BookingPageContent />
+    </ProtectedRoute>
   );
 };
 

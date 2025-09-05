@@ -3,16 +3,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add authentication logic with Supabase
-    console.log("Sign in:", { email, password });
+    setIsLoading(true);
+    
+    const success = await signIn(email, password);
+    if (success) {
+      navigate("/home");
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -60,8 +70,8 @@ const SignIn = () => {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full font-poppins font-medium">
-                Sign In
+              <Button type="submit" className="w-full font-poppins font-medium" disabled={isLoading}>
+                {isLoading ? "Signing In..." : "Sign In"}
               </Button>
             </form>
             

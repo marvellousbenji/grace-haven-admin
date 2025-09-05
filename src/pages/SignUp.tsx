@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,9 @@ const SignUp = () => {
     password: "",
     confirmPassword: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -21,14 +25,26 @@ const SignUp = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords don't match!");
       return;
     }
-    // TODO: Add authentication logic with Supabase
-    console.log("Sign up:", formData);
+    
+    setIsLoading(true);
+    const success = await signUp({
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      password: formData.password,
+    });
+    
+    if (success) {
+      navigate("/home");
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -117,8 +133,8 @@ const SignUp = () => {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full font-poppins font-medium">
-                Create Account
+              <Button type="submit" className="w-full font-poppins font-medium" disabled={isLoading}>
+                {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
             

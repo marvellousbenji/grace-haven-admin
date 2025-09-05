@@ -3,16 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Link } from "react-router-dom";
-import { Star, Heart, ShoppingBag, Calendar, Phone, Mail, MapPin, Plus, Upload } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Star, Heart, ShoppingBag, Calendar, Phone, Mail, MapPin, Plus, Upload, LogOut } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductUpload } from "@/components/ProductUpload";
 import { Product } from "@/types/product";
 import { storage } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Home = () => {
   const { toast } = useToast();
+  const { user, signOut, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -33,8 +36,22 @@ const Home = () => {
   };
 
   const handleBookAppointment = (product: Product) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to book an appointment",
+        variant: "destructive",
+      });
+      navigate("/signin");
+      return;
+    }
     // Redirect to booking page with product ID
     window.location.href = `/booking?productId=${product.id}`;
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    navigate("/");
   };
 
   return (
@@ -58,18 +75,40 @@ const Home = () => {
               <Plus className="h-4 w-4 mr-2" />
               Add Product
             </Button>
-            <Button variant="ghost" size="icon">
-              <Heart className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <ShoppingBag className="h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/booking">
-                <Calendar className="h-4 w-4 mr-2" />
-                Book Fitting
-              </Link>
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Button variant="ghost" size="icon">
+                  <Heart className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon">
+                  <ShoppingBag className="h-5 w-5" />
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/booking">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Book Fitting
+                  </Link>
+                </Button>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-muted-foreground">
+                    Hi, {user?.firstName}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/signin">Sign In</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </nav>
