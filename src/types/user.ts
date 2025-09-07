@@ -5,6 +5,10 @@ export interface User {
   lastName: string;
   role: 'admin' | 'user';
   createdAt: string;
+  // Admin-specific fields
+  phone?: string;
+  location?: string;
+  brandName?: string;
 }
 
 export interface AuthContextType {
@@ -21,4 +25,8 @@ export interface SignUpData {
   email: string;
   password: string;
   role: 'admin' | 'user';
+  // Admin-specific fields
+  phone?: string;
+  location?: string;
+  brandName?: string;
 }

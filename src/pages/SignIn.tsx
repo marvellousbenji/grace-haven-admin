@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accountType, setAccountType] = useState<'user' | 'admin'>('user');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -19,7 +21,7 @@ const SignIn = () => {
     
     const success = await signIn(email, password);
     if (success) {
-      navigate("/home");
+      navigate(accountType === 'admin' ? "/admin" : "/home");
     }
     
     setIsLoading(false);
@@ -46,6 +48,18 @@ const SignIn = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="font-poppins font-medium">Account Type</Label>
+                <Select value={accountType} onValueChange={(value: 'user' | 'admin') => setAccountType(value)}>
+                  <SelectTrigger className="font-poppins">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Customer</SelectItem>
+                    <SelectItem value="admin">Tailor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="font-poppins font-medium">Email</Label>
                 <Input

@@ -37,6 +37,11 @@ export const authStorage = {
       lastName: userData.lastName,
       role: userData.role,
       createdAt: new Date().toISOString(),
+      ...(userData.role === 'admin' && {
+        phone: userData.phone,
+        location: userData.location,
+        brandName: userData.brandName,
+      }),
     };
 
     users.push(newUser);

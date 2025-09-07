@@ -14,7 +14,10 @@ const SignUp = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "user" as 'user' | 'admin'
+    role: "user" as 'user' | 'admin',
+    phone: "",
+    location: "",
+    brandName: ""
   });
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
@@ -41,10 +44,15 @@ const SignUp = () => {
       email: formData.email,
       password: formData.password,
       role: formData.role,
+      ...(formData.role === 'admin' && {
+        phone: formData.phone,
+        location: formData.location,
+        brandName: formData.brandName,
+      }),
     });
     
     if (success) {
-      navigate("/home");
+      navigate(formData.role === 'admin' ? "/admin" : "/home");
     }
     
     setIsLoading(false);
@@ -144,10 +152,56 @@ const SignUp = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="user">Customer</SelectItem>
-                    <SelectItem value="admin">Admin/Tailor</SelectItem>
+                    <SelectItem value="admin">Tailor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* Additional fields for Tailor */}
+              {formData.role === 'admin' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="font-poppins font-medium">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="font-poppins"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="font-poppins font-medium">Location</Label>
+                    <Input
+                      id="location"
+                      name="location"
+                      type="text"
+                      placeholder="Enter your location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      className="font-poppins"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="brandName" className="font-poppins font-medium">Brand Name</Label>
+                    <Input
+                      id="brandName"
+                      name="brandName"
+                      type="text"
+                      placeholder="Enter your brand name"
+                      value={formData.brandName}
+                      onChange={handleChange}
+                      className="font-poppins"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+              
               <Button type="submit" className="w-full font-poppins font-medium" disabled={isLoading}>
                 {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
