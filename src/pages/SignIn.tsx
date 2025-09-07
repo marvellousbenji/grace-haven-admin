@@ -6,13 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [accountType, setAccountType] = useState<'user' | 'admin'>('user');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,6 +25,20 @@ const SignIn = () => {
     
     const success = await signIn(email, password);
     if (success) {
+      // Get the signed in user from auth context
+      const user = JSON.parse(localStorage.getItem('grace_haven_current_user') || 'null');
+      
+      // Check if the selected account type matches the user's actual role
+      if (user && user.role !== accountType) {
+        toast({
+          title: "Invalid account type",
+          description: `This account is registered as a ${user.role === 'admin' ? 'tailor' : 'customer'}`,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       navigate(accountType === 'admin' ? "/admin" : "/home");
     }
     
@@ -74,15 +92,26 @@ const SignIn = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="font-poppins font-medium">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="font-poppins"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="font-poppins pr-10"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
               <Button type="submit" className="w-full font-poppins font-medium" disabled={isLoading}>
                 {isLoading ? "Signing In..." : "Sign In"}

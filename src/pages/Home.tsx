@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Link, useNavigate } from "react-router-dom";
-import { Star, Heart, ShoppingBag, Calendar, Phone, Mail, MapPin, Plus, Upload, LogOut } from "lucide-react";
+import { Star, Heart, ShoppingBag, Calendar, Phone, Mail, MapPin, Plus, Upload, LogOut, User } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductUpload } from "@/components/ProductUpload";
 import { Cart } from "@/components/Cart";
@@ -97,6 +97,14 @@ const Home = () => {
                   <span className="text-sm text-muted-foreground">
                     Hi, {user?.firstName}
                   </span>
+                  {user?.role === 'user' && (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/customer-dashboard">
+                        <User className="h-4 w-4 mr-2" />
+                        My Account
+                      </Link>
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
