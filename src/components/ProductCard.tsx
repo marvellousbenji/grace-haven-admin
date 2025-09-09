@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from '@/types/product';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Heart, ShoppingBag, Plus, Calendar } from 'lucide-react';
+import { Heart, ShoppingBag, Plus, Calendar, MessageCircle } from 'lucide-react';
 import { storage } from "@/lib/storage";
+import { favorites } from "@/lib/favorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,14 +16,22 @@ interface ProductCardProps {
   product: Product;
   onViewDetails: (product: Product) => void;
   onBookAppointment: (product: Product) => void;
+  onContactTailor?: (tailorId: string, tailorName: string) => void;
 }
 
-export function ProductCard({ product, onViewDetails, onBookAppointment }: ProductCardProps) {
+export function ProductCard({ product, onViewDetails, onBookAppointment, onContactTailor }: ProductCardProps) {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [showAddToCart, setShowAddToCart] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setIsFavorite(favorites.isFavorite(user.id, product.id));
+    }
+  }, [user, product.id]);
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -69,6 +78,48 @@ export function ProductCard({ product, onViewDetails, onBookAppointment }: Produ
     setSelectedColor("");
   };
 
+  const handleToggleFavorite = () => {
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add items to favorites",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isFavorite) {
+      favorites.removeFromFavorites(user.id, product.id);
+      setIsFavorite(false);
+      toast({
+        title: "Removed from favorites",
+        description: `${product.name} has been removed from your favorites`,
+      });
+    } else {
+      favorites.addToFavorites(user.id, product.id);
+      setIsFavorite(true);
+      toast({
+        title: "Added to favorites",
+        description: `${product.name} has been added to your favorites`,
+      });
+    }
+  };
+
+  const handleContactTailor = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to contact the tailor",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (onContactTailor) {
+      onContactTailor(product.id, "Grace Haven Tailor");
+    }
+  };
+
   return (
     <>
       <Card className="group overflow-hidden bg-card hover:shadow-elegant transition-all duration-300">
@@ -81,10 +132,11 @@ export function ProductCard({ product, onViewDetails, onBookAppointment }: Produ
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <Button
             size="icon"
-            variant="secondary"
+            variant={isFavorite ? "default" : "secondary"}
             className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            onClick={handleToggleFavorite}
           >
-            <Heart className="h-4 w-4" />
+            <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
           </Button>
         </div>
         
@@ -107,30 +159,44 @@ export function ProductCard({ product, onViewDetails, onBookAppointment }: Produ
             </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1"
+              className="flex-1 min-w-0"
               onClick={() => onViewDetails(product)}
             >
-              View Details
+              <span className="hidden sm:inline">View Details</span>
+              <span className="sm:hidden">Details</span>
             </Button>
             <Button 
               variant="outline"
               size="sm" 
-              className="flex-1"
+              className="flex-1 min-w-0"
               onClick={() => setShowAddToCart(true)}
             >
-              <ShoppingBag className="h-4 w-4 mr-1" />
-              Add to Cart
+              <ShoppingBag className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Add to Cart</span>
+              <span className="sm:hidden">Cart</span>
             </Button>
             <Button 
               size="sm" 
+              className="flex-1 min-w-0"
               onClick={() => onBookAppointment(product)}
             >
-              <Calendar className="h-4 w-4 mr-1" />
-              Book
+              <Calendar className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Book</span>
+              <span className="sm:hidden">Book</span>
+            </Button>
+            <Button 
+              variant="outline"
+              size="sm" 
+              className="flex-1 min-w-0"
+              onClick={handleContactTailor}
+            >
+              <MessageCircle className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Contact</span>
+              <span className="sm:hidden">Chat</span>
             </Button>
           </div>
         </CardContent>
@@ -138,7 +204,7 @@ export function ProductCard({ product, onViewDetails, onBookAppointment }: Produ
 
       {/* Add to Cart Dialog */}
       <Dialog open={showAddToCart} onOpenChange={setShowAddToCart}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md mx-4">
           <DialogHeader>
             <DialogTitle>Add to Cart</DialogTitle>
           </DialogHeader>

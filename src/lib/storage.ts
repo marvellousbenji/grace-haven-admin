@@ -3,6 +3,7 @@ import { Product, Booking, CartItem } from '@/types/product';
 const PRODUCTS_KEY = 'grace_haven_products';
 const BOOKINGS_KEY = 'grace_haven_bookings';
 const CART_KEY = 'grace_haven_cart';
+const FAVORITES_KEY = 'grace_haven_favorites';
 
 export const storage = {
   // Products
@@ -97,5 +98,43 @@ export const storage = {
 
   clearCart: () => {
     localStorage.removeItem(CART_KEY);
+  },
+
+  // Favorites  
+  getFavoriteIds: (userId: string): string[] => {
+    const favorites = localStorage.getItem(FAVORITES_KEY);
+    const favoritesArray = favorites ? JSON.parse(favorites) : [];
+    return favoritesArray
+      .filter((fav: any) => fav.userId === userId)
+      .map((fav: any) => fav.productId);
+  },
+
+  addToFavorites: (userId: string, productId: string) => {
+    const favorites = localStorage.getItem(FAVORITES_KEY);
+    const favoritesArray = favorites ? JSON.parse(favorites) : [];
+    
+    const existingIndex = favoritesArray.findIndex(
+      (fav: any) => fav.userId === userId && fav.productId === productId
+    );
+    
+    if (existingIndex === -1) {
+      favoritesArray.push({
+        userId,
+        productId,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoritesArray));
+    }
+  },
+
+  removeFromFavorites: (userId: string, productId: string) => {
+    const favorites = localStorage.getItem(FAVORITES_KEY);
+    const favoritesArray = favorites ? JSON.parse(favorites) : [];
+    
+    const updatedFavorites = favoritesArray.filter(
+      (fav: any) => !(fav.userId === userId && fav.productId === productId)
+    );
+    
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
   }
 };
